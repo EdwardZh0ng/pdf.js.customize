@@ -26,9 +26,9 @@
   --sidebar-transition-duration: 200ms;
   --sidebar-transition-timing-function: ease;
 
-  --toolbar-height: 32px;
-  --toolbar-horizontal-padding: 1px;
-  --toolbar-vertical-padding: 2px;
+  --toolbar-height: 40px;
+  --toolbar-horizontal-padding: 8px;
+  --toolbar-vertical-padding: 6px;
   --icon-size: 16px;
 
   --toolbar-icon-opacity: 0.7;
@@ -104,7 +104,9 @@
   --toolbarButton-editorInk-icon: url(images/toolbarButton-editorInk.svg);
   --toolbarButton-editorStamp-icon: url(images/toolbarButton-editorStamp.svg);
   --toolbarButton-editorSignature-icon: url(images/toolbarButton-editorSignature.svg);
+  --toolbarButton-list-icon: url(images/toolbarButton-list.svg);
   --toolbarButton-menuArrow-icon: url(images/toolbarButton-menuArrow.svg);
+  --toolbarButton-more-icon: url(images/toolbarButton-more.svg);
   --toolbarButton-sidebarToggle-icon: url(images/toolbarButton-sidebarToggle.svg);
   --toolbarButton-secondaryToolbarToggle-icon: url(images/toolbarButton-secondaryToolbarToggle.svg);
   --toolbarButton-pageUp-icon: url(images/toolbarButton-pageUp.svg);
@@ -499,12 +501,12 @@ body {
 }
 
 #sidebarToggleButton::before {
-  mask-image: var(--toolbarButton-sidebarToggle-icon);
+  mask-image: var(--toolbarButton-list-icon);
   transform: scaleX(var(--dir-factor));
 }
 
 #secondaryToolbarToggleButton::before {
-  mask-image: var(--toolbarButton-secondaryToolbarToggle-icon);
+  mask-image: var(--toolbarButton-more-icon);
   transform: scaleX(var(--dir-factor));
 }
 
