@@ -16,7 +16,6 @@
 /** @typedef {import("./event_utils.js").EventBus} EventBus */
 
 import {
-  CursorTool,
   ScrollMode,
   SpreadMode,
   toggleCheckedBtn,
@@ -29,14 +28,9 @@ import { PagesCountLimit } from "./pdf_viewer.js";
  * @property {HTMLDivElement} toolbar - Container for the secondary toolbar.
  * @property {HTMLButtonElement} toggleButton - Button to toggle the visibility
  *   of the secondary toolbar.
- * @property {HTMLButtonElement} presentationModeButton - Button for entering
- *   presentation mode.
- * @property {HTMLButtonElement} openFileButton - Button to open a file.
  * @property {HTMLButtonElement} printButton - Button to print the document.
  * @property {HTMLButtonElement} downloadButton - Button to download the
  *   document.
- * @property {HTMLAnchorElement} viewBookmarkButton - Button to obtain a
- *   bookmark link to the current location in the document.
  * @property {HTMLButtonElement} firstPageButton - Button to go to the first
  *   page in the document.
  * @property {HTMLButtonElement} lastPageButton - Button to go to the last page
@@ -45,14 +39,8 @@ import { PagesCountLimit } from "./pdf_viewer.js";
  *   clockwise.
  * @property {HTMLButtonElement} pageRotateCcwButton - Button to rotate the
  *   pages counterclockwise.
- * @property {HTMLButtonElement} cursorSelectToolButton - Button to enable the
- *   select tool.
- * @property {HTMLButtonElement} cursorHandToolButton - Button to enable the
- *   hand tool.
  * @property {HTMLButtonElement} imageAltTextSettingsButton - Button for opening
  *   the image alt-text settings dialog.
- * @property {HTMLButtonElement} documentPropertiesButton - Button for opening
- *   the document properties dialog.
  */
 
 class SecondaryToolbar {
@@ -65,14 +53,6 @@ class SecondaryToolbar {
   constructor(options, eventBus) {
     this.#opts = options;
     const buttons = [
-      {
-        element: options.presentationModeButton,
-        eventName: "presentationmode",
-        close: true,
-      },
-      { element: options.printButton, eventName: "print", close: true },
-      { element: options.downloadButton, eventName: "download", close: true },
-      { element: options.viewBookmarkButton, eventName: null, close: true },
       { element: options.firstPageButton, eventName: "firstpage", close: true },
       { element: options.lastPageButton, eventName: "lastpage", close: true },
       {
@@ -84,18 +64,6 @@ class SecondaryToolbar {
         element: options.pageRotateCcwButton,
         eventName: "rotateccw",
         close: false,
-      },
-      {
-        element: options.cursorSelectToolButton,
-        eventName: "switchcursortool",
-        eventDetails: { tool: CursorTool.SELECT },
-        close: true,
-      },
-      {
-        element: options.cursorHandToolButton,
-        eventName: "switchcursortool",
-        eventDetails: { tool: CursorTool.HAND },
-        close: true,
       },
       {
         element: options.scrollPageButton,
@@ -144,19 +112,7 @@ class SecondaryToolbar {
         eventName: "imagealttextsettings",
         close: true,
       },
-      {
-        element: options.documentPropertiesButton,
-        eventName: "documentproperties",
-        close: true,
-      },
     ];
-    if (typeof PDFJSDev === "undefined" || PDFJSDev.test("GENERIC")) {
-      buttons.push({
-        element: options.openFileButton,
-        eventName: "openfile",
-        close: true,
-      });
-    }
 
     this.eventBus = eventBus;
     this.opened = false;
@@ -191,7 +147,7 @@ class SecondaryToolbar {
     this.#updateUIState();
 
     // Reset the Scroll/Spread buttons too, since they're document specific.
-    this.eventBus.dispatch("switchcursortool", { source: this, reset: true });
+    // this.eventBus.dispatch("switchcursortool", { source: this, reset: true }); // Removed: cursor tool buttons deleted
     this.#scrollModeChanged({ mode: ScrollMode.VERTICAL });
     this.#spreadModeChanged({ mode: SpreadMode.NONE });
   }
@@ -218,36 +174,27 @@ class SecondaryToolbar {
 
     // All items within the secondary toolbar.
     for (const { element, eventName, close, eventDetails } of buttons) {
-      element.addEventListener("click", evt => {
-        if (eventName !== null) {
-          eventBus.dispatch(eventName, { source: this, ...eventDetails });
-        }
-        if (close) {
-          this.close();
-        }
-        eventBus.dispatch("reporttelemetry", {
-          source: this,
-          details: {
-            type: "buttons",
-            data: { id: element.id },
-          },
+      if (element) {
+        element.addEventListener("click", evt => {
+          if (eventName !== null) {
+            eventBus.dispatch(eventName, { source: this, ...eventDetails });
+          }
+          if (close) {
+            this.close();
+          }
+          eventBus.dispatch("reporttelemetry", {
+            source: this,
+            details: {
+              type: "buttons",
+              data: { id: element.id },
+            },
+          });
         });
-      });
+      }
     }
 
-    eventBus._on("cursortoolchanged", this.#cursorToolChanged.bind(this));
     eventBus._on("scrollmodechanged", this.#scrollModeChanged.bind(this));
     eventBus._on("spreadmodechanged", this.#spreadModeChanged.bind(this));
-  }
-
-  #cursorToolChanged({ tool, disabled }) {
-    const { cursorSelectToolButton, cursorHandToolButton } = this.#opts;
-
-    toggleCheckedBtn(cursorSelectToolButton, tool === CursorTool.SELECT);
-    toggleCheckedBtn(cursorHandToolButton, tool === CursorTool.HAND);
-
-    cursorSelectToolButton.disabled = disabled;
-    cursorHandToolButton.disabled = disabled;
   }
 
   #scrollModeChanged({ mode }) {

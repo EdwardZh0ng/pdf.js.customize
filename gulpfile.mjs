@@ -2600,3 +2600,88 @@ gulp.task("externaltest", function (done) {
   });
   done();
 });
+
+// New directory for unified build
+const UNIFIED_DIR = BUILD_DIR + "pdfjs-viewer/";
+
+function buildUnifiedGeneric(defines, dir) {
+  fs.rmSync(dir, { recursive: true, force: true });
+
+  return ordered([
+    createMainBundle(defines).pipe(gulp.dest(dir + "build")),
+    createWorkerBundle(defines).pipe(gulp.dest(dir + "build")),
+    createSandboxBundle(defines).pipe(gulp.dest(dir + "build")),
+    createWebBundle(defines, {
+      defaultPreferencesDir: defines.SKIP_BABEL
+        ? "generic/"
+        : "generic-legacy/",
+    }).pipe(gulp.dest(dir + "web")),
+    gulp
+      .src(COMMON_WEB_FILES, { base: "web/", encoding: false })
+      .pipe(gulp.dest(dir + "web")),
+    gulp.src("LICENSE", { encoding: false }).pipe(gulp.dest(dir)),
+    gulp
+      .src(["web/locale/*/viewer.ftl", "web/locale/locale.json"], {
+        base: "web/",
+        encoding: false,
+      })
+      .pipe(gulp.dest(dir + "web")),
+    createCMapBundle().pipe(gulp.dest(dir + "web/cmaps")),
+    createICCBundle().pipe(gulp.dest(dir + "web/iccs")),
+    createStandardFontBundle().pipe(gulp.dest(dir + "web/standard_fonts")),
+    createWasmBundle().pipe(gulp.dest(dir + "web/wasm")),
+
+    // Rename viewer.html to index.html and adjust paths
+    preprocessHTML("web/viewer.html", defines)
+      .pipe(replace('href="locale/locale.json"', 'href="web/locale/locale.json"'))
+      .pipe(replace('src="../build/pdf.mjs"', 'src="build/pdf.mjs"'))
+      .pipe(replace('href="viewer.css"', 'href="web/viewer.css"'))
+      .pipe(replace('src="viewer.mjs"', 'src="web/viewer.mjs"'))
+      .pipe(rename("index.html"))
+      .pipe(gulp.dest(dir)),
+    preprocessCSS("web/viewer.css", defines)
+      .pipe(
+        postcss([
+          postcssDirPseudoClass(),
+          discardCommentsCSS(),
+          postcssNesting(),
+          postcssLightDarkFunction({ preserve: true }),
+          autoprefixer(AUTOPREFIXER_CONFIG),
+        ])
+      )
+      .pipe(gulp.dest(dir + "web")),
+
+    gulp
+      .src("web/compressed.tracemonkey-pldi-09.pdf", { encoding: false })
+      .pipe(gulp.dest(dir + "web")),
+  ]);
+}
+
+// Builds the unified generic viewer with all content in one directory
+gulp.task(
+  "generic-unified",
+  gulp.series(
+    createBuildNumber,
+    "locale",
+    function scriptingGenericUnified() {
+      const defines = { ...DEFINES, GENERIC: true };
+      return ordered([
+        buildDefaultPreferences(defines, "generic/"),
+        createTemporaryScriptingBundle(defines),
+      ]);
+    },
+    async function prefsGenericUnified() {
+      await parseDefaultPreferences("generic/");
+    },
+    function createGenericUnified() {
+      console.log();
+      console.log("### Creating unified generic viewer");
+      const defines = { ...DEFINES, GENERIC: true };
+
+      return buildUnifiedGeneric(defines, UNIFIED_DIR);
+    }
+  )
+);
+
+// Overwrite the default generic task to use the unified build
+gulp.task("generic", gulp.task("generic-unified"));

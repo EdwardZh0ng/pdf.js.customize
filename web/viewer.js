@@ -43,47 +43,14 @@ function getViewerConfiguration() {
       next: document.getElementById("next"),
       zoomIn: document.getElementById("zoomInButton"),
       zoomOut: document.getElementById("zoomOutButton"),
-      print: document.getElementById("printButton"),
-      editorFreeTextButton: document.getElementById("editorFreeTextButton"),
-      editorFreeTextParamsToolbar: document.getElementById(
-        "editorFreeTextParamsToolbar"
-      ),
-      editorHighlightButton: document.getElementById("editorHighlightButton"),
-      editorHighlightParamsToolbar: document.getElementById(
-        "editorHighlightParamsToolbar"
-      ),
-      editorHighlightColorPicker: document.getElementById(
-        "editorHighlightColorPicker"
-      ),
-      editorInkButton: document.getElementById("editorInkButton"),
-      editorInkParamsToolbar: document.getElementById("editorInkParamsToolbar"),
-      editorStampButton: document.getElementById("editorStampButton"),
-      editorStampParamsToolbar: document.getElementById(
-        "editorStampParamsToolbar"
-      ),
-      editorSignatureButton: document.getElementById("editorSignatureButton"),
-      editorSignatureParamsToolbar: document.getElementById(
-        "editorSignatureParamsToolbar"
-      ),
-      download: document.getElementById("downloadButton"),
     },
     secondaryToolbar: {
       toolbar: document.getElementById("secondaryToolbar"),
       toggleButton: document.getElementById("secondaryToolbarToggleButton"),
-      presentationModeButton: document.getElementById("presentationMode"),
-      openFileButton:
-        typeof PDFJSDev === "undefined" || PDFJSDev.test("GENERIC")
-          ? document.getElementById("secondaryOpenFile")
-          : null,
-      printButton: document.getElementById("secondaryPrint"),
-      downloadButton: document.getElementById("secondaryDownload"),
-      viewBookmarkButton: document.getElementById("viewBookmark"),
       firstPageButton: document.getElementById("firstPage"),
       lastPageButton: document.getElementById("lastPage"),
       pageRotateCwButton: document.getElementById("pageRotateCw"),
       pageRotateCcwButton: document.getElementById("pageRotateCcw"),
-      cursorSelectToolButton: document.getElementById("cursorSelectTool"),
-      cursorHandToolButton: document.getElementById("cursorHandTool"),
       scrollPageButton: document.getElementById("scrollPage"),
       scrollVerticalButton: document.getElementById("scrollVertical"),
       scrollHorizontalButton: document.getElementById("scrollHorizontal"),
@@ -97,14 +64,12 @@ function getViewerConfiguration() {
       imageAltTextSettingsSeparator: document.getElementById(
         "imageAltTextSettingsSeparator"
       ),
-      documentPropertiesButton: document.getElementById("documentProperties"),
     },
     sidebar: {
       // Divs (and sidebar button)
       outerContainer: document.getElementById("outerContainer"),
       sidebarContainer: document.getElementById("sidebarContainer"),
       toggleButton: document.getElementById("sidebarToggleButton"),
-      resizer: document.getElementById("sidebarResizer"),
       // Buttons
       thumbnailButton: document.getElementById("viewThumbnail"),
       outlineButton: document.getElementById("viewOutline"),
@@ -118,19 +83,6 @@ function getViewerConfiguration() {
       // View-specific options
       currentOutlineItemButton: document.getElementById("currentOutlineItem"),
     },
-    findBar: {
-      bar: document.getElementById("findbar"),
-      toggleButton: document.getElementById("viewFindButton"),
-      findField: document.getElementById("findInput"),
-      highlightAllCheckbox: document.getElementById("findHighlightAll"),
-      caseSensitiveCheckbox: document.getElementById("findMatchCase"),
-      matchDiacriticsCheckbox: document.getElementById("findMatchDiacritics"),
-      entireWordCheckbox: document.getElementById("findEntireWord"),
-      findMsg: document.getElementById("findMsg"),
-      findResultsCount: document.getElementById("findResultsCount"),
-      findPreviousButton: document.getElementById("findPreviousButton"),
-      findNextButton: document.getElementById("findNextButton"),
-    },
     passwordOverlay: {
       dialog: document.getElementById("passwordDialog"),
       label: document.getElementById("passwordText"),
@@ -138,26 +90,10 @@ function getViewerConfiguration() {
       submitButton: document.getElementById("passwordSubmit"),
       cancelButton: document.getElementById("passwordCancel"),
     },
-    documentProperties: {
-      dialog: document.getElementById("documentPropertiesDialog"),
-      closeButton: document.getElementById("documentPropertiesClose"),
-      fields: {
-        fileName: document.getElementById("fileNameField"),
-        fileSize: document.getElementById("fileSizeField"),
-        title: document.getElementById("titleField"),
-        author: document.getElementById("authorField"),
-        subject: document.getElementById("subjectField"),
-        keywords: document.getElementById("keywordsField"),
-        creationDate: document.getElementById("creationDateField"),
-        modificationDate: document.getElementById("modificationDateField"),
-        creator: document.getElementById("creatorField"),
-        producer: document.getElementById("producerField"),
-        version: document.getElementById("versionField"),
-        pageCount: document.getElementById("pageCountField"),
-        pageSize: document.getElementById("pageSizeField"),
-        linearized: document.getElementById("linearizedField"),
-      },
-    },
+    // documentProperties: {
+    //   dialog: document.getElementById("documentPropertiesDialog"),
+    //   closeButton: document.getElementById("documentPropertiesClose"),
+    // },
     altTextDialog: {
       dialog: document.getElementById("altTextDialog"),
       optionDescription: document.getElementById("descriptionButton"),
@@ -236,21 +172,6 @@ function getViewerConfiguration() {
       editSignatureView: document.getElementById("editSignatureView"),
       cancelButton: document.getElementById("editSignatureCancelButton"),
       updateButton: document.getElementById("editSignatureUpdateButton"),
-    },
-    annotationEditorParams: {
-      editorFreeTextFontSize: document.getElementById("editorFreeTextFontSize"),
-      editorFreeTextColor: document.getElementById("editorFreeTextColor"),
-      editorInkColor: document.getElementById("editorInkColor"),
-      editorInkThickness: document.getElementById("editorInkThickness"),
-      editorInkOpacity: document.getElementById("editorInkOpacity"),
-      editorStampAddImage: document.getElementById("editorStampAddImage"),
-      editorSignatureAddSignature: document.getElementById(
-        "editorSignatureAddSignature"
-      ),
-      editorFreeHighlightThickness: document.getElementById(
-        "editorFreeHighlightThickness"
-      ),
-      editorHighlightShowAll: document.getElementById("editorHighlightShowAll"),
     },
     printContainer: document.getElementById("printContainer"),
     editorUndoBar: {

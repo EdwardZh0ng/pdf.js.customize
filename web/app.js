@@ -77,8 +77,6 @@ import { OverlayManager } from "./overlay_manager.js";
 import { PasswordPrompt } from "./password_prompt.js";
 import { PDFAttachmentViewer } from "web-pdf_attachment_viewer";
 import { PDFCursorTools } from "web-pdf_cursor_tools";
-import { PDFDocumentProperties } from "web-pdf_document_properties";
-import { PDFFindBar } from "web-pdf_find_bar";
 import { PDFFindController } from "./pdf_find_controller.js";
 import { PDFHistory } from "./pdf_history.js";
 import { PDFLayerViewer } from "web-pdf_layer_viewer";
@@ -124,8 +122,6 @@ const PDFViewerApplication = {
   pdfRenderingQueue: null,
   /** @type {PDFPresentationMode} */
   pdfPresentationMode: null,
-  /** @type {PDFDocumentProperties} */
-  pdfDocumentProperties: null,
   /** @type {PDFLinkService} */
   pdfLinkService: null,
   /** @type {PDFHistory} */
@@ -476,8 +472,7 @@ const PDFViewerApplication = {
         ? new SignatureManager(
             appConfig.addSignatureDialog,
             appConfig.editSignatureDialog,
-            appConfig.annotationEditorParams?.editorSignatureAddSignature ||
-              null,
+            appConfig.toolbar?.editorSignatureButton,
             overlayManager,
             l10n,
             externalServices.createSignatureStorage(eventBus, abortSignal),
@@ -604,15 +599,12 @@ const PDFViewerApplication = {
       );
     }
 
-    // NOTE: The cursor-tools are unlikely to be helpful/useful in GeckoView,
-    // in particular the `HandTool` which basically simulates touch scrolling.
-    if (appConfig.secondaryToolbar?.cursorHandToolButton) {
-      this.pdfCursorTools = new PDFCursorTools({
-        container,
-        eventBus,
-        cursorToolOnLoad: AppOptions.get("cursorToolOnLoad"),
-      });
-    }
+    // Initialize cursor tools with hand tool as default (since UI buttons are removed)
+    this.pdfCursorTools = new PDFCursorTools({
+      container,
+      eventBus,
+      cursorToolOnLoad: CursorTool.HAND, // Default to hand tool
+    });
 
     if (appConfig.toolbar) {
       if (
@@ -795,7 +787,7 @@ const PDFViewerApplication = {
     }
 
     if (this.supportsIntegratedFind) {
-      appConfig.findBar?.toggleButton?.classList.add("hidden");
+      // appConfig.findBar?.toggleButton?.classList.add("hidden"); // Removed: findBar functionality deleted
     }
 
     if (typeof PDFJSDev === "undefined" || PDFJSDev.test("GENERIC")) {
@@ -1028,10 +1020,10 @@ const PDFViewerApplication = {
   _hideViewBookmark() {
     const { secondaryToolbar } = this.appConfig;
     // URL does not reflect proper document location - hiding some buttons.
-    secondaryToolbar?.viewBookmarkButton.classList.add("hidden");
+    secondaryToolbar?.viewBookmarkButton?.classList.add("hidden");
 
     // Avoid displaying multiple consecutive separators in the secondaryToolbar.
-    if (secondaryToolbar?.presentationModeButton.classList.contains("hidden")) {
+    if (secondaryToolbar?.presentationModeButton?.classList.contains("hidden")) {
       document.getElementById("viewBookmarkSeparator")?.classList.add("hidden");
     }
   },
@@ -1099,7 +1091,6 @@ const PDFViewerApplication = {
     this.pdfLayerViewer?.reset();
 
     this.pdfHistory?.reset();
-    this.findBar?.reset();
     this.toolbar?.reset();
     this.secondaryToolbar?.reset();
     this._PDFBug?.cleanup();
@@ -1637,13 +1628,6 @@ const PDFViewerApplication = {
     this._contentDispositionFilename ??= contentDispositionFilename;
     this._contentLength ??= contentLength; // See `getDownloadInfo`-call above.
 
-    // Provides some basic debug information
-    console.log(
-      `PDF ${pdfDocument.fingerprints[0]} [${info.PDFFormatVersion} ` +
-        `${(metadata?.get("pdf:producer") || info.Producer || "-").trim()} / ` +
-        `${(metadata?.get("xmp:creatortool") || info.Creator || "-").trim()}` +
-        `] (PDF.js: ${version || "?"} [${build || "?"}])`
-    );
     const pdfTitle = this._docTitle;
 
     if (pdfTitle) {
@@ -2308,6 +2292,7 @@ if (typeof PDFJSDev === "undefined" || PDFJSDev.test("GENERIC")) {
       return;
     }
     const viewerOrigin = URL.parse(window.location)?.origin || "null";
+
     if (HOSTED_VIEWER_ORIGINS.has(viewerOrigin)) {
       // Hosted or local viewer, allow for any file locations
       return;
@@ -2454,7 +2439,7 @@ function onUpdateViewarea({ location }) {
         // Unable to write to storage.
       });
   }
-  if (this.appConfig.secondaryToolbar) {
+  if (this.appConfig.secondaryToolbar?.viewBookmarkButton) {
     this.appConfig.secondaryToolbar.viewBookmarkButton.href =
       this.pdfLinkService.getAnchorUrl(location.pdfOpenParams);
   }

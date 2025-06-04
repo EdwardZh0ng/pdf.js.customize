@@ -526,7 +526,9 @@ if (typeof PDFJSDev === "undefined" || !PDFJSDev.test("MOZCENTRAL")) {
     value:
       typeof PDFJSDev !== "undefined" && PDFJSDev.test("CHROME")
         ? ""
-        : "compressed.tracemonkey-pldi-09.pdf",
+        // 加载默认pdf文档，测试用
+        // : "compressed.tracemonkey-pldi-09.pdf",
+        :"",
     kind: OptionKind.VIEWER,
   };
   defaultOptions.sandboxBundleSrc = {

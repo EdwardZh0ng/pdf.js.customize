@@ -411,22 +411,24 @@ class PDFSidebar {
       }
     });
 
-    // Handle resizing of the sidebar.
-    this.resizer.addEventListener("mousedown", evt => {
-      if (evt.button !== 0) {
-        return;
-      }
-      // Disable the `transition-duration` rules when sidebar resizing begins,
-      // in order to improve responsiveness and to avoid visual glitches.
-      outerContainer.classList.add(SIDEBAR_RESIZING_CLASS);
+    // Handle resizing of the sidebar (only if resizer element exists).
+    if (this.resizer) {
+      this.resizer.addEventListener("mousedown", evt => {
+        if (evt.button !== 0) {
+          return;
+        }
+        // Disable the `transition-duration` rules when sidebar resizing begins,
+        // in order to improve responsiveness and to avoid visual glitches.
+        outerContainer.classList.add(SIDEBAR_RESIZING_CLASS);
 
-      this.#mouseAC = new AbortController();
-      const opts = { signal: this.#mouseAC.signal };
+        this.#mouseAC = new AbortController();
+        const opts = { signal: this.#mouseAC.signal };
 
-      window.addEventListener("mousemove", this.#mouseMove.bind(this), opts);
-      window.addEventListener("mouseup", this.#mouseUp.bind(this), opts);
-      window.addEventListener("blur", this.#mouseUp.bind(this), opts);
-    });
+        window.addEventListener("mousemove", this.#mouseMove.bind(this), opts);
+        window.addEventListener("mouseup", this.#mouseUp.bind(this), opts);
+        window.addEventListener("blur", this.#mouseUp.bind(this), opts);
+      });
+    }
 
     eventBus._on("resize", evt => {
       // When the *entire* viewer is resized, such that it becomes narrower,
