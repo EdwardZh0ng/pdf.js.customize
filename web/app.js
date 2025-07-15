@@ -715,9 +715,14 @@ const PDFViewerApplication = {
 
     const { appConfig, eventBus } = this;
     let file;
+    let customTitle; // 添加自定义标题变量
+    
+    // 在所有情况下都尝试解析自定义标题参数
+    const queryString = document.location.search.substring(1);
+    const params = parseQueryString(queryString);
+    customTitle = params.get("t"); // 获取自定义标题参数
+    
     if (typeof PDFJSDev === "undefined" || PDFJSDev.test("GENERIC")) {
-      const queryString = document.location.search.substring(1);
-      const params = parseQueryString(queryString);
       file = params.get("file") ?? AppOptions.get("defaultUrl");
       validateFileURL(file);
     } else if (PDFJSDev.test("MOZCENTRAL")) {
@@ -792,12 +797,12 @@ const PDFViewerApplication = {
 
     if (typeof PDFJSDev === "undefined" || PDFJSDev.test("GENERIC")) {
       if (file) {
-        this.open({ url: file });
+        this.open({ url: file, customTitle }); // 将自定义标题传递给open方法
       } else {
         this._hideViewBookmark();
       }
     } else if (PDFJSDev.test("MOZCENTRAL || CHROME")) {
-      this.setTitleUsingUrl(file, /* downloadUrl = */ file);
+      this.setTitleUsingUrl(file, /* downloadUrl = */ file, customTitle);
 
       this.externalServices.initPassiveLoading();
     } else {
@@ -944,7 +949,7 @@ const PDFViewerApplication = {
     this._caretBrowsing.moveCaret(isUp, select);
   },
 
-  setTitleUsingUrl(url = "", downloadUrl = null) {
+  setTitleUsingUrl(url = "", downloadUrl = null, customTitle = null) {
     this.url = url;
     this.baseUrl =
       typeof PDFJSDev === "undefined" || PDFJSDev.test("GENERIC")
@@ -968,15 +973,20 @@ const PDFViewerApplication = {
       AppOptions.set("docBaseUrl", this.baseUrl);
     }
 
-    let title = getPdfFilenameFromUrl(url, "");
-    if (!title) {
-      try {
-        title = decodeURIComponent(getFilenameFromUrl(url));
-      } catch {
-        // decodeURIComponent may throw URIError.
+    // 如果有自定义标题参数，使用自定义标题；否则使用原来的逻辑
+    if (customTitle) {
+      this.setTitle(customTitle);
+    } else {
+      let title = getPdfFilenameFromUrl(url, "");
+      if (!title) {
+        try {
+          title = decodeURIComponent(getFilenameFromUrl(url));
+        } catch {
+          // decodeURIComponent may throw URIError.
+        }
       }
+      this.setTitle(title || url); // Always fallback to the raw URL.
     }
-    this.setTitle(title || url); // Always fallback to the raw URL.
   },
 
   setTitle(title = this._title) {
@@ -1101,7 +1111,7 @@ const PDFViewerApplication = {
   /**
    * Opens a new PDF document.
    * @param {Object} args - Accepts any/all of the properties from
-   *   {@link DocumentInitParameters}, and also a `originalUrl` string.
+   *   {@link DocumentInitParameters}, and also a `originalUrl` string and `customTitle` string.
    * @returns {Promise} - Promise that is resolved when the document is opened.
    */
   async open(args) {
@@ -1122,7 +1132,8 @@ const PDFViewerApplication = {
       // `initPassiveLoading`, and it never provides an `originalUrl` here.
       this.setTitleUsingUrl(
         args.originalUrl || args.url,
-        /* downloadUrl = */ args.url
+        /* downloadUrl = */ args.url,
+        args.customTitle
       );
     }
 
