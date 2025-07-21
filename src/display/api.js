@@ -501,7 +501,8 @@ function getDocument(src = {}) {
           task,
           networkStream,
           transportParams,
-          transportFactory
+          transportFactory,
+          enableHWA
         );
         task._transport = transport;
         messageHandler.send("Ready", null);
@@ -1181,8 +1182,14 @@ class PDFDocumentProxy {
  * Page render parameters.
  *
  * @typedef {Object} RenderParameters
- * @property {CanvasRenderingContext2D} canvasContext - A 2D context of a DOM
- *   Canvas object.
+ * @property {CanvasRenderingContext2D} canvasContext - 2D context of a DOM
+ *   Canvas object for backwards compatibility; it is recommended to use the
+ *   `canvas` parameter instead.
+ *   If the context must absolutely be used to render the page, the canvas must
+ *   be null.
+ * @property {HTMLCanvasElement|null} canvas - A DOM Canvas object. The default
+ *   value is the canvas associated with the `canvasContext` parameter if no
+ *   value is provided explicitly.
  * @property {PageViewport} viewport - Rendering viewport obtained by calling
  *   the `PDFPageProxy.getViewport` method.
  * @property {string} [intent] - Rendering intent, can be 'display', 'print',
@@ -1405,6 +1412,7 @@ class PDFPageProxy {
    */
   render({
     canvasContext,
+    canvas = canvasContext.canvas,
     viewport,
     intent = "display",
     annotationMode = AnnotationMode.ENABLE,
@@ -1496,6 +1504,7 @@ class PDFPageProxy {
       callback: complete,
       // Only include the required properties, and *not* the entire object.
       params: {
+        canvas,
         canvasContext,
         viewport,
         transform,
@@ -1511,6 +1520,7 @@ class PDFPageProxy {
       useRequestAnimationFrame: !intentPrint,
       pdfBug: this._pdfBug,
       pageColors,
+      enableHWA: this._transport.enableHWA,
     });
 
     (intentState.renderTasks ||= new Set()).add(internalRenderTask);
@@ -2305,7 +2315,14 @@ class WorkerTransport {
 
   #passwordCapability = null;
 
-  constructor(messageHandler, loadingTask, networkStream, params, factory) {
+  constructor(
+    messageHandler,
+    loadingTask,
+    networkStream,
+    params,
+    factory,
+    enableHWA
+  ) {
     this.messageHandler = messageHandler;
     this.loadingTask = loadingTask;
     this.commonObjs = new PDFObjects();
@@ -2329,6 +2346,7 @@ class WorkerTransport {
     this._fullReader = null;
     this._lastProgress = null;
     this.downloadInfoCapability = Promise.withResolvers();
+    this.enableHWA = enableHWA;
 
     this.setupMessageHandler();
 
@@ -3104,6 +3122,7 @@ class InternalRenderTask {
     useRequestAnimationFrame = false,
     pdfBug = false,
     pageColors = null,
+    enableHWA = false,
   }) {
     this.callback = callback;
     this.params = params;
@@ -3131,7 +3150,9 @@ class InternalRenderTask {
     this._continueBound = this._continue.bind(this);
     this._scheduleNextBound = this._scheduleNext.bind(this);
     this._nextBound = this._next.bind(this);
-    this._canvas = params.canvasContext.canvas;
+    this._canvas = params.canvas;
+    this._canvasContext = params.canvas ? null : params.canvasContext;
+    this._enableHWA = enableHWA;
   }
 
   get completed() {
@@ -3161,7 +3182,16 @@ class InternalRenderTask {
       this.stepper.init(this.operatorList);
       this.stepper.nextBreakPoint = this.stepper.getNextBreakPoint();
     }
-    const { canvasContext, viewport, transform, background } = this.params;
+    const { viewport, transform, background } = this.params;
+
+    // When printing in Firefox, we get a specific context in mozPrintCallback
+    // which cannot be created from the canvas itself.
+    const canvasContext =
+      this._canvasContext ||
+      this._canvas.getContext("2d", {
+        alpha: false,
+        willReadFrequently: !this._enableHWA,
+      });
 
     this.gfx = new CanvasGraphics(
       canvasContext,
